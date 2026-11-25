@@ -24,8 +24,12 @@ Use when:
 - Prefer small fixes at the right ownership boundary; no refactor unless it clearly improves the bug class.
 - When an accepted finding shows a bug class or repeated pattern, inspect the current PR scope for sibling instances before fixing.
 - Fix the scoped bug class at once when practical; stop at touched surfaces, owner boundaries, and clear follow-up territory.
-- Keep going until structured review returns no accepted/actionable findings.
-- If a review-triggered fix changes code, rerun focused tests and rerun the structured review helper.
+- Round cap: at most 3 review rounds per task. A round is one structured review helper run that returns a review result; a panel run counts as one round. Capacity retries and runs that fail before a result do not count. After round 3, stop, even if findings remain.
+- Fix only high-confidence findings: a real bug or a concrete, actionable risk that you verified in the code, with a concrete failure scenario (input or state, then wrong result or crash).
+- Do not fix medium/low-confidence, speculative, style, or nice-to-have findings. List them in the final report, one line each.
+- The reviewer's `priority` and `confidence` fields are hints only. Decide high confidence yourself, after you verify the finding in the code.
+- Rerun review only when a fix in this round changed behavior and fewer than 3 rounds ran. Rerun focused tests first. Do not rerun after a fix that changed no behavior (comments, formatting, wording that keeps the meaning). Edits to skills, policies, or prompts can change agent behavior.
+- Stop early when a round has no high-confidence findings, even if the helper exited nonzero.
 - Never switch or override the requested review engine/model. If the review hits model capacity, retry the same command a few times with the same engine/model.
 - Be patient with large bundles. Structured review can take many minutes while the model call is active, especially with read-only tool use or web search enabled.
 - Treat heartbeat lines like `review still running: agent elapsed=... pid=...` as healthy progress, not a hang. Pass `--stream-engine-output` when live engine text is useful; the agent and Claude displays filter thinking/tool chatter, other engines pass raw output through.
@@ -110,7 +114,7 @@ Format first if formatting can change line locations. Then it is OK to run tests
 "$AUTOREVIEW" --parallel-tests "<focused test command>"
 ```
 
-Tradeoff: tests may force code changes that stale the review. If tests or review lead to code edits, rerun the affected tests and rerun review until no accepted/actionable findings remain. Once that rerun exits cleanly, stop.
+Tradeoff: tests may force code changes that stale the review. If tests or review lead to code edits, rerun the affected tests. Rerun review only under the round cap in the Contract: the edit changed behavior and fewer than 3 rounds ran. Stop after a round with no high-confidence findings, or after round 3.
 
 ## Review Panels
 
@@ -228,8 +232,10 @@ The malicious fixture requires the review to flag the injected command-execution
 Include:
 
 - review command used
+- rounds used (max 3)
 - tests/proof run
-- findings accepted/rejected, briefly why
-- the clean review result from the final helper/review run, or why a remaining finding was consciously rejected
+- findings fixed, briefly why each is high-confidence
+- findings not fixed, one line each: below the high-confidence bar, or still open after round 3
+- the result of the final helper run: clean, or the findings left when the cap stopped review
 
 Do not run another review solely to improve the final report wording. If the final helper run exited 0 and produced no accepted/actionable findings, report that exact run as clean.
