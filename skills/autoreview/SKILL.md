@@ -1,17 +1,17 @@
 ---
 name: autoreview
-description: "Run a structured code review (Cursor agent default with gpt-5.5-high, optional Claude, Codex, Pi, Droid, Copilot, or OpenCode) as a closeout check on a local or PR branch before commit or ship. Use this whenever the user asks for a code review, agent review, cursor review, gpt-5.5 review, second-model review, or autoreview, and proactively after non-trivial code edits before finalizing, committing, pushing, or opening a PR."
+description: "Run a structured code review (Cursor agent default with gemini-4-neon-high, optional Claude, Codex, Pi, Droid, Copilot, or OpenCode) as a closeout check on a local or PR branch before commit or ship. Use this whenever the user asks for a code review, agent review, cursor review, Gemini Neon review, second-model review, or autoreview, and proactively after non-trivial code edits before finalizing, committing, pushing, or opening a PR."
 ---
 
 # Auto Review
 
 Run the bundled structured review helper as a closeout check. This is code review, not approval routing.
 
-The `agent` engine (Cursor's `cursor-agent` CLI) is the default when no engine is set. It uses `gpt-5.5-high` by default, runs read-only, and should remain the normal final closeout engine. Claude review is the strongly-isolated alternative and uses `claude-fable-5` by default.
+The `agent` engine (Cursor's `cursor-agent` CLI) is the default when no engine is set. It uses `gemini-4-neon-high` by default, runs read-only, and should remain the normal final closeout engine. Claude review is the strongly-isolated alternative and uses `claude-fable-5` by default.
 
 Use when:
 
-- the user asks for an agent review / cursor review / gpt-5.5 review / Claude review / Codex review / Pi review / Droid review / OpenCode review / autoreview / second-model review
+- the user asks for an agent review / cursor review / Gemini Neon review / Claude review / Codex review / Pi review / Droid review / OpenCode review / autoreview / second-model review
 - after non-trivial code edits, before final/commit/ship
 - reviewing a local branch or PR branch after fixes
 
@@ -133,13 +133,13 @@ Run multiple reviewers against one frozen bundle:
 Set reviewer models explicitly. The agent engine bakes reasoning effort into the model id, so pick the effort by choosing the model:
 
 ```bash
-"$AUTOREVIEW" --reviewers agent,claude --model agent=gpt-5.5-high --model claude=claude-fable-5 --thinking claude=max
+"$AUTOREVIEW" --reviewers agent,claude --model agent=gemini-4-neon-high --model claude=claude-fable-5 --thinking claude=max
 ```
 
 Inline syntax is also supported for simple model IDs:
 
 ```bash
-"$AUTOREVIEW" --reviewers agent:gpt-5.5-high,claude:claude-fable-5:max
+"$AUTOREVIEW" --reviewers agent:gemini-4-neon-high,claude:claude-fable-5:max
 ```
 
 ## Models and effort
@@ -150,20 +150,21 @@ Recommended model defaults:
 
 | Engine | Default model | Note |
 |--------|---------------|------|
-| **agent** (default) | `gpt-5.5-high` | Cursor's `cursor-agent`; "GPT-5.5 1M High" |
+| **agent** (default) | `gemini-4-neon-high` | Cursor's `cursor-agent`; "Gemini 4 Neon High" |
 | **claude** | `claude-fable-5` | strongest reviewed-repo isolation here |
 
 CLI flags and environment variables override these defaults.
 
-GPT-5.5 effort variants available to `cursor-agent` (pick via `--model`):
+Gemini 4 Neon effort variants available to `cursor-agent` (pick via `--model`):
 
 | Model id | Cursor label |
 |----------|--------------|
-| `gpt-5.5-none` | GPT-5.5 1M None |
-| `gpt-5.5-low` | GPT-5.5 1M Low |
-| `gpt-5.5-medium` | GPT-5.5 1M |
-| `gpt-5.5-high` (default) | GPT-5.5 1M High |
-| `gpt-5.5-extra-high` | GPT-5.5 1M Extra High |
+| `gemini-4-neon-low` | Gemini 4 Neon Low |
+| `gemini-4-neon-medium` | Gemini 4 Neon Medium |
+| `gemini-4-neon-high` (default) | Gemini 4 Neon High |
+| `gemini-4-neon-xhigh` | Gemini 4 Neon Extra High |
+
+Cursor shows no 1M-context variant for Gemini 4 Neon. The `gemini-4-neon-high[context=1m]` override is rejected ("Cannot use this model").
 
 Run `cursor-agent --list-models` to see the full catalog (Claude, Gemini, Composer, and Codex models are also available there). The `--thinking` flag still applies to the non-agent engines (Claude: `low/medium/high/xhigh/max`; Codex: `none/minimal/low/medium/high/xhigh`; etc.).
 
@@ -176,7 +177,7 @@ CLI flags take precedence over environment variables.
 | `AUTOREVIEW_ENGINE` | Default engine (defaults to `agent`) |
 | `CURSOR_AGENT_BIN` | Path to the `cursor-agent` binary (defaults to `cursor-agent` on PATH) |
 | `AUTOREVIEW_MODEL` | Override the built-in default `--model` for all engines |
-| `AUTOREVIEW_AGENT_MODEL` | Per-engine model override for the agent engine, e.g. `gpt-5.5-extra-high` |
+| `AUTOREVIEW_AGENT_MODEL` | Per-engine model override for the agent engine, e.g. `gemini-4-neon-xhigh` |
 | `AUTOREVIEW_THINKING` | Default `--thinking` for engines that support it (ignored by agent) |
 | `AUTOREVIEW_STREAM_ENGINE_OUTPUT` | `1` to stream live engine text |
 
@@ -190,7 +191,7 @@ cursor-agent --print \
   --mode ask \                   # read-only Q&A: inspect, do not edit
   --trust \                      # headless trust grant so it does not block on a prompt
   --workspace <repo> \
-  --model gpt-5.5-high
+  --model gemini-4-neon-high
 ```
 
 The model is instructed to return exactly one JSON object matching the review schema. The helper extracts that object from the `result` field of `cursor-agent`'s JSON (or the final `result` event in stream-json), validates it, drops out-of-scope findings, prints the report, and exits nonzero when there are accepted/actionable findings.

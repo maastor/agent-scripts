@@ -20,13 +20,13 @@ from typing import Any, Callable
 
 ENGINES = ("agent", "codex", "claude", "droid", "copilot", "pi", "opencode")
 DEFAULT_MODEL_BY_ENGINE = {
-    "agent": "gpt-5.5-high",
+    "agent": "gemini-4-neon-high",
     "codex": "gpt-5.5",
     "claude": "claude-fable-5",
 }
 THINKING_LEVELS_BY_ENGINE = {
     # cursor-agent encodes reasoning effort in the model id
-    # (gpt-5.5-none/-low/-medium/-high/-extra-high), so it has no separate
+    # (gemini-4-neon-low/-medium/-high/-xhigh), so it has no separate
     # thinking knob. Pick effort via --model instead.
     "agent": set(),
     "codex": {"none", "minimal", "low", "medium", "high", "xhigh"},
@@ -1910,12 +1910,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--base")
     parser.add_argument("--commit", default="HEAD")
     parser.add_argument("--engine", choices=ENGINES, default=os.environ.get("AUTOREVIEW_ENGINE", "agent"))
-    parser.add_argument("--reviewers", help="Comma-separated review panel, e.g. agent,claude or agent:gpt-5.5-high.")
+    parser.add_argument("--reviewers", help="Comma-separated review panel, e.g. agent,claude or agent:gemini-4-neon-high.")
     parser.add_argument("--panel", action="store_true", help="Run an agent/Claude review panel unless --engine changes the first reviewer.")
     parser.add_argument(
         "--model",
         action="append",
-        help="Model for all reviewers or engine=model. Repeatable. Defaults: agent=gpt-5.5-high, codex=gpt-5.5, claude=claude-fable-5.",
+        help="Model for all reviewers or engine=model. Repeatable. Defaults: agent=gemini-4-neon-high, codex=gpt-5.5, claude=claude-fable-5.",
     )
     parser.add_argument("--thinking", action="append", help="Thinking/effort for all reviewers or engine=level. Repeatable. Codex: none, minimal, low, medium, high, xhigh. Claude: low, medium, high, xhigh, max. Droid: off, none, low, medium, high. Pi: off, minimal, low, medium, high, xhigh. OpenCode: minimal, low, medium, high, max.")
     parser.add_argument(
@@ -2240,7 +2240,7 @@ def self_test_config_defaults() -> None:
     ]
     with preserve_env(keys):
         default_agent = reviewer_args(reviewer_test_args(engine="agent"))[0]
-        if default_agent.model != "gpt-5.5-high":
+        if default_agent.model != "gemini-4-neon-high":
             raise SystemExit(f"self-test config defaults failed: default agent model={default_agent.model!r}")
         default_codex = reviewer_args(reviewer_test_args(engine="codex"))[0]
         if default_codex.model != "gpt-5.5":
